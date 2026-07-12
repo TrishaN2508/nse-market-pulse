@@ -25,4 +25,18 @@ ORDER BY trade_date
 result2 = pd.read_sql(query2, conn)
 print(result2)
 
+query3 = """
+SELECT b.trade_date, b.symbol, b.volume, b.close_price,
+       d.delivery_pct, d.delivery_qty
+FROM bhavcopy b
+JOIN delivery d
+    ON b.trade_date = d.trade_date
+    AND b.symbol = d.symbol
+ORDER BY b.volume DESC
+LIMIT 10
+"""
+
+result3 = pd.read_sql(query3, conn)
+print(result3)
+
 conn.close()
