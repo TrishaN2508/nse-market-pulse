@@ -40,3 +40,13 @@ result3 = pd.read_sql(query3, conn)
 print(result3)
 
 conn.close()
+
+conn = sqlite3.connect("nse_market_pulse.db")
+categories = pd.read_sql("SELECT category, COUNT(*) as cnt FROM announcements GROUP BY category ORDER BY cnt DESC", conn)
+conn.close()
+print(categories.to_string())
+
+conn = sqlite3.connect("nse_market_pulse.db")
+check = pd.read_sql("SELECT * FROM fii_dii ORDER BY trade_date DESC LIMIT 4", conn)
+conn.close()
+print(check)

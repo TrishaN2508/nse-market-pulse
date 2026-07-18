@@ -27,14 +27,15 @@ Python, pandas, requests, scipy, SQLite, SQL
 
 ## Project structure
 nse-market-pulse/
-├── fetch_one_day.py            # Single-day bhavcopy fetch (reference/debug)
-├── fetch_range.py              # Multi-day bhavcopy fetch with holiday filtering
-├── fetch_delivery_one_day.py   # Single-day delivery data fetch (reference/debug)
-├── fetch_delivery_range.py     # Multi-day delivery data fetch with holiday filtering
-├── fetch_bulk_deals_range.py   # Multi-day bulk deals fetch (per-day looping; endpoint ignores date-range params)
-├── fetch_fii_dii.py            # Daily FII/DII snapshot with same-day upsert safeguard
-├── analyze.py                  # SQL queries against the stored data
-├── stat_test.py                # Statistical test: volume vs. delivery percentage
+├── fetch_one_day.py              # Single-day bhavcopy fetch (reference/debug)
+├── fetch_range.py                # Multi-day bhavcopy fetch with holiday filtering
+├── fetch_delivery_one_day.py     # Single-day delivery data fetch (reference/debug)
+├── fetch_delivery_range.py       # Multi-day delivery data fetch with holiday filtering
+├── fetch_bulk_deals_range.py     # Multi-day bulk deals fetch (per-day looping; endpoint ignores date-range params)
+├── fetch_fii_dii.py              # Daily FII/DII snapshot with same-day upsert safeguard
+├── fetch_announcements_range.py  # 30-day corporate announcements fetch
+├── analyze.py                    # SQL queries against the stored data
+├── stat_test.py                  # Statistical test: volume vs. delivery percentage
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -52,6 +53,9 @@ python stat_test.py
 ```
 
 The first three scripts download the last ~30 days of data (skipping weekends and NSE holidays automatically). `fetch_fii_dii.py` fetches only the current day's data and is meant to be run daily to build up history over time — NSE doesn't expose a historical range for this dataset. All data is stored in `nse_market_pulse.db` (a local SQLite file, not committed to this repo).
+
+## Automation
+`fetch_fii_dii.py` is scheduled to run automatically on weekdays via Windows Task Scheduler, since NSE only exposes same-day FII/DII figures with no historical backfill available. The task is configured to catch up if the scheduled run is missed (e.g., laptop was off), and the script's built-in upsert logic ensures re-running it on the same day safely overwrites that day's data rather than creating duplicates — useful since NSE's figures are provisional and may be revised intraday.
 
 ## Data sources
 - **Bhavcopy**: `nsearchives.nseindia.com` (NSE's UDiFF format, adopted July 2024)
