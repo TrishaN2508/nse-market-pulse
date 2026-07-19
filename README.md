@@ -8,6 +8,17 @@ High-volume trading days show significantly lower delivery percentages than typi
 
 This is a correlational finding, not a causal one — both high volume and low delivery could be driven by a shared underlying factor (e.g., interest in low-priced, volatile stocks), rather than volume directly causing lower delivery.
 
+## Dashboard
+![NSE Market Pulse Dashboard](screenshots/dashboard.png)
+
+An interactive Power BI dashboard (`nse_market_pulse_dashboard.pbix`) built on top of the SQLite database, featuring:
+- KPI cards summarizing stocks tracked, average delivery %, and bulk deals recorded
+- A scatter plot visualizing the core volume-vs-delivery-% finding
+- Top 10 stocks by average trading volume
+- FII/DII net flow trend over time
+
+Data is exported from SQLite to CSV via `export_for_powerbi.py`; the dashboard is refreshed manually by re-running the export and clicking Refresh in Power BI Desktop.
+
 ## What it does so far
 - Downloads NSE's daily equity bhavcopy (open/high/low/close price, volume, turnover, number of trades)
 - Downloads NSE's daily delivery position data (delivery quantity and delivery percentage per stock)
