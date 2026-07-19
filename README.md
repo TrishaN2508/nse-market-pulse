@@ -32,6 +32,8 @@ Data is exported from SQLite to CSV via `export_for_powerbi.py`; the dashboard i
 - Joins price/volume data with delivery data by date and symbol
 - Runs a statistical hypothesis test (Welch's t-test) comparing delivery percentage between high-volume and normal-volume trading days
 - Implements a same-day upsert safeguard for FII/DII data (which NSE only ever publishes as a same-day snapshot, no historical range available), so the pipeline can be run multiple times a day without creating duplicates, while still capturing revisions to provisional figures
+- Downloads NSE's corporate announcements (30-day range), covering board meetings, credit ratings, resignations, and 100+ other filing categories
+- Visualizes all findings in an interactive Power BI dashboard, built on a CSV export of the SQLite data
 
 ## Tech stack
 Python, pandas, requests, scipy, SQLite, SQL
@@ -45,6 +47,9 @@ nse-market-pulse/
 ├── fetch_bulk_deals_range.py     # Multi-day bulk deals fetch (per-day looping; endpoint ignores date-range params)
 ├── fetch_fii_dii.py              # Daily FII/DII snapshot with same-day upsert safeguard
 ├── fetch_announcements_range.py  # 30-day corporate announcements fetch
+├── export_for_powerbi.py         # Exports SQLite tables to CSV for Power BI
+├── nse_market_pulse_dashboard.pbix  # Power BI dashboard file
+├── screenshots/                  # Dashboard screenshot for this README
 ├── analyze.py                    # SQL queries against the stored data
 ├── stat_test.py                  # Statistical test: volume vs. delivery percentage
 ├── requirements.txt
@@ -61,6 +66,8 @@ python fetch_bulk_deals_range.py
 python fetch_fii_dii.py
 python analyze.py
 python stat_test.py
+python fetch_announcements_range.py
+python export_for_powerbi.py
 ```
 
 The first three scripts download the last ~30 days of data (skipping weekends and NSE holidays automatically). `fetch_fii_dii.py` fetches only the current day's data and is meant to be run daily to build up history over time — NSE doesn't expose a historical range for this dataset. All data is stored in `nse_market_pulse.db` (a local SQLite file, not committed to this repo).
@@ -78,9 +85,10 @@ The first three scripts download the last ~30 days of data (skipping weekends an
 All sources require no API key, just a browser-like session with valid cookies (and in some cases a valid `Referer` header). NSE's bulk deals endpoint additionally sits behind bot-detection on at least one alternate URL pattern that was tested and abandoned in favor of the working endpoint above. NSE has changed file formats/URLs before and may again — the download logic may need updates if that happens.
 
 ## Roadmap
-- [ ] Add corporate announcements data, to explain price/volume/delivery spikes
-- [ ] Build an interactive dashboard (Power BI / Tableau / Streamlit)
 - [ ] Extend statistical analysis to bulk deals and FII/DII (e.g., does bulk deal activity coincide with delivery spikes?)
+- [ ] Add corporate financial results and shareholding pattern data
+- [ ] Deploy dashboard as a live shareable link (Streamlit or Power BI Service)
+- [ ] Migrate from SQLite to MySQL for a proper client-server database setup
 
 ## Limitations
 - Data reflects market-wide aggregate activity per stock per day, not per-broker or per-counterparty detail
