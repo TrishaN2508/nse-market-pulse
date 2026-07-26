@@ -34,6 +34,7 @@ Data is exported from SQLite to CSV via `export_for_powerbi.py`; the dashboard i
 - Implements a same-day upsert safeguard for FII/DII data (which NSE only ever publishes as a same-day snapshot, no historical range available), so the pipeline can be run multiple times a day without creating duplicates, while still capturing revisions to provisional figures
 - Downloads NSE's corporate announcements (30-day range), covering board meetings, credit ratings, resignations, and 100+ other filing categories
 - Visualizes all findings in an interactive Power BI dashboard, built on a CSV export of the SQLite data
+- Downloads NSE's corporate financial results filing index (company, quarter, filing type, audited status) using a probe-then-fetch pattern — first querying the exact record count, then requesting precisely that many in a single request, to avoid data drift from NSE's live-updating feed shifting mid-pagination
 
 ## Tech stack
 Python, pandas, requests, scipy, SQLite, SQL
@@ -48,6 +49,8 @@ nse-market-pulse/
 ├── fetch_bulk_deals_range.py     # Multi-day bulk deals fetch (per-day looping; endpoint ignores date-range params)
 ├── fetch_fii_dii.py              # Daily FII/DII snapshot with same-day upsert safeguard
 ├── fetch_announcements_range.py  # 30-day corporate announcements fetch
+├── fetch_financial_results_one_day.py   # Financial results filing index exploration/reference
+├── fetch_financial_results_range.py     # 30-day financial results filing index (probe-then-fetch)
 ├── export_for_powerbi.py         # Exports SQLite tables to CSV for Power BI
 ├── nse_market_pulse_dashboard.pbix  # Power BI dashboard file
 ├── screenshots/                  # Dashboard screenshot for this README
@@ -85,6 +88,7 @@ The first three scripts download the last ~30 days of data (skipping weekends an
 - **Bulk deals**: `nseindia.com/api/historicalOR/bulk-block-short-deals` (internal API, discovered via browser DevTools network inspection; the API's `to` date parameter is not honored, so data must be fetched one day at a time)
 - **FII/DII activity**: `nseindia.com/api/fiidiiTradeReact` (internal API; same-day snapshot only, no historical range; data is explicitly provisional per NSE, subject to revision via NSDL's custodial confirmation process)
 - **Holiday calendar**: NSE's internal holiday-master API
+- **Financial results filings**: `nseindia.com/api/integrated-filing-results` (NSE's current Integrated Filing system, replacing an older `corporates-financial-results` endpoint found to be stale/deprecated; provides filing metadata only — actual revenue/profit/EPS figures are embedded in linked XBRL/iXBRL documents, which are out of scope for this project)
 
 All sources require no API key, just a browser-like session with valid cookies (and in some cases a valid `Referer` header). NSE's bulk deals endpoint additionally sits behind bot-detection on at least one alternate URL pattern that was tested and abandoned in favor of the working endpoint above. NSE has changed file formats/URLs before and may again — the download logic may need updates if that happens.
 
@@ -101,3 +105,4 @@ All sources require no API key, just a browser-like session with valid cookies (
 - Bulk deals history in this project only extends as far back as the pipeline has actually been run manually — this source cannot be backfilled from NSE's public site
 - FII/DII data is collected automatically via GitHub Actions (see Cloud automation below), reducing but not eliminating gap risk — a gap would still occur if GitHub Actions itself experienced an outage during a trading day, though this is far less likely than a personal laptop being off
 - Analysis currently covers a ~1 month rolling window (bhavcopy/delivery); longer historical analysis would strengthen the finding
+- Financial results data covers filing events only (who filed, when, for what quarter) — not the underlying revenue/profit/EPS figures, which would require XBRL parsing (a separate, substantial undertaking)
