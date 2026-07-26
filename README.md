@@ -39,6 +39,7 @@ Data is exported from SQLite to CSV via `export_for_powerbi.py`; the dashboard i
 Python, pandas, requests, scipy, SQLite, SQL
 
 ## Project structure
+```
 nse-market-pulse/
 ├── fetch_one_day.py              # Single-day bhavcopy fetch (reference/debug)
 ├── fetch_range.py                # Multi-day bhavcopy fetch with holiday filtering
@@ -55,7 +56,7 @@ nse-market-pulse/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
-
+```
 ## Setup
 
 ```bash
