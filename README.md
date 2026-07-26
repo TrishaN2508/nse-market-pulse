@@ -97,6 +97,7 @@ All sources require no API key, just a browser-like session with valid cookies (
 - [ ] Add corporate financial results and shareholding pattern data
 - [ ] Deploy dashboard as a live shareable link (Streamlit or Power BI Service)
 - [ ] Migrate from SQLite to MySQL for a proper client-server database setup
+- [ ] Shareholding pattern data — investigated (`nseindia.com/api/corporate-share-holdings-master`); real promoter/public % data confirmed available, but the dataset is fundamentally quarterly (not daily) and would need different date-handling logic than the rest of this project's daily time-series tables. Deferred as a lower-priority addition.
 
 ## Limitations
 - Data reflects market-wide aggregate activity per stock per day, not per-broker or per-counterparty detail
