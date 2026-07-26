@@ -76,6 +76,9 @@ The first three scripts download the last ~30 days of data (skipping weekends an
 ## Automation
 `fetch_fii_dii.py` is scheduled to run automatically on weekdays via Windows Task Scheduler, since NSE only exposes same-day FII/DII figures with no historical backfill available. The task is configured to catch up if the scheduled run is missed (e.g., laptop was off), and the script's built-in upsert logic ensures re-running it on the same day safely overwrites that day's data rather than creating duplicates — useful since NSE's figures are provisional and may be revised intraday.
 
+## Cloud automation
+`fetch_fii_dii_cloud.py` runs automatically via GitHub Actions (`.github/workflows/fii_dii_daily.yml`) on weekdays at 8 PM IST, independent of any local machine. This was built after discovering that the local Windows Task Scheduler approach could miss a full trading day's data if the laptop wasn't powered on at all during that day — since NSE's FII/DII endpoint has no historical backfill, a missed day is permanently unrecoverable. Moving this specific pipeline to GitHub Actions removes that single point of failure. Results are committed directly to `data/fii_dii_history.csv` in this repo. The workflow can also be triggered manually from the Actions tab.
+
 ## Data sources
 - **Bhavcopy**: `nsearchives.nseindia.com` (NSE's UDiFF format, adopted July 2024)
 - **Delivery position data**: `archives.nseindia.com` (`sec_bhavdata_full` report)
@@ -95,5 +98,6 @@ All sources require no API key, just a browser-like session with valid cookies (
 - Data reflects market-wide aggregate activity per stock per day, not per-broker or per-counterparty detail
 - The volume/delivery relationship found here is correlational, not causal
 - FII/DII data is provisional as published by NSE and may not reflect final, custodial-confirmed figures
-- FII/DII and bulk deals history in this project only extends as far back as the pipeline has actually been run — these sources cannot be backfilled from NSE's public site
+- Bulk deals history in this project only extends as far back as the pipeline has actually been run manually — this source cannot be backfilled from NSE's public site
+- FII/DII data is collected automatically via GitHub Actions (see Cloud automation below), reducing but not eliminating gap risk — a gap would still occur if GitHub Actions itself experienced an outage during a trading day, though this is far less likely than a personal laptop being off
 - Analysis currently covers a ~1 month rolling window (bhavcopy/delivery); longer historical analysis would strengthen the finding
