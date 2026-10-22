@@ -12,7 +12,7 @@ session = requests.Session()
 session.get("https://www.nseindia.com", headers=headers, timeout=10)
 
 end_date = date.today()
-start_date = end_date - timedelta(days=30)
+start_date = end_date - timedelta(days=365)
 
 from_str = start_date.strftime("%d-%m-%Y")
 to_str = end_date.strftime("%d-%m-%Y")
@@ -36,7 +36,7 @@ url = (
     f"&period_ended=all&type=Integrated%20Filing-%20Financials"
     f"&page=0&size={actual_size}"
 )
-response = session.get(url, headers=headers, timeout=10)
+response = session.get(url, headers=headers, timeout=30)
 data = response.json()
 
 records = data["data"]

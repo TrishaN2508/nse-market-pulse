@@ -20,8 +20,16 @@ holiday_dates_raw = [entry["tradingDate"] for entry in holiday_data["CM"]]
 holiday_dates = [datetime.strptime(d, "%d-%b-%Y").date() for d in holiday_dates_raw]
 
 # --- Date range ---
+
+conn = sqlite3.connect("nse_market_pulse.db")
+last_date = pd.read_sql("SELECT MAX(trade_date) AS d FROM bulk_deals", conn)["d"][0]
+conn.close()
+
+start_date = datetime.strptime(last_date, "%Y-%m-%d").date() + timedelta(days=1)
 end_date = date.today()
-start_date = end_date - timedelta(days=30)
+
+#end_date = date.today()
+#start_date = end_date - timedelta(days=365)
 
 current_date = start_date
 date_list = []
@@ -41,7 +49,7 @@ for d in trading_dates:
     url = f"https://www.nseindia.com/api/historicalOR/bulk-block-short-deals?optionType=bulk_deals&from={date_str}&to={date_str}"
 
     try:
-        response = session.get(url, headers=headers, timeout=10)
+        response = session.get(url, headers=headers, timeout=30)
 
         if response.status_code != 200:
             print(f"{date_str}: skipped (status {response.status_code})")
@@ -57,12 +65,19 @@ for d in trading_dates:
         all_days.append(day_df)
         print(f"{date_str}: OK ({len(day_df)} rows)")
 
+        if len(all_days) % 25 == 0:
+            print(f"--- Progress: {len(all_days)} days downloaded so far ---")
+
     except Exception as e:
         print(f"{date_str}: failed - {e}")
 
     time.sleep(1)
 
 print(f"\nTotal days with data: {len(all_days)}")
+
+if not all_days:
+    print("Already up to date.")
+    raise SystemExit
 
 # --- Combine and clean ---
 combined_df = pd.concat(all_days, ignore_index=True)
@@ -82,12 +97,14 @@ combined_df = combined_df.rename(columns={
 combined_df = combined_df[["trade_date", "symbol", "security_name", "client_name",
                             "buy_sell", "qty_traded", "avg_price"]]
 
+combined_df = combined_df[combined_df["trade_date"].astype(str) > last_date]
+
 print(combined_df.shape)
 print(combined_df.dtypes)
 
 # --- Save to database ---
 conn = sqlite3.connect("nse_market_pulse.db")
-combined_df.to_sql("bulk_deals", conn, if_exists="replace", index=False)
+combined_df.to_sql("bulk_deals", conn, if_exists="append", index=False)
 conn.close()
 
 print("Saved to database.")
